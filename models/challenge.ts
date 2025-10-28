@@ -122,7 +122,8 @@ const CHALLENGE_KEYS = [
   'lfrChallenge',
   'closeNotificationsChallenge',
   'csafChallenge',
-  'exposedCredentialsChallenge'
+  'exposedCredentialsChallenge',
+  'leakedApiKeyChallenge'
 ] as const
 
 export type ChallengeKey = typeof CHALLENGE_KEYS[number]
@@ -136,8 +137,6 @@ InferCreationAttributes<Challenge>
   declare category: string
   declare description: string
   declare difficulty: number
-  declare hint: string | null
-  declare hintUrl: string | null
   declare mitigationUrl: CreationOptional<string> | null
   declare key: ChallengeKey
   declare disabledEnv: CreationOptional<string> | null
@@ -145,6 +144,7 @@ InferCreationAttributes<Challenge>
   declare tags: string | undefined
   declare solved: CreationOptional<boolean>
   declare codingChallengeStatus: CreationOptional<number>
+  declare hasCodingChallenge: boolean
 }
 
 const ChallengeModelInit = (sequelize: Sequelize) => {
@@ -164,13 +164,12 @@ const ChallengeModelInit = (sequelize: Sequelize) => {
       tags: DataTypes.STRING,
       description: DataTypes.STRING,
       difficulty: DataTypes.INTEGER,
-      hint: DataTypes.STRING,
-      hintUrl: DataTypes.STRING,
       mitigationUrl: DataTypes.STRING,
       solved: DataTypes.BOOLEAN,
       disabledEnv: DataTypes.STRING,
       tutorialOrder: DataTypes.NUMBER,
-      codingChallengeStatus: DataTypes.NUMBER
+      codingChallengeStatus: DataTypes.NUMBER,
+      hasCodingChallenge: DataTypes.BOOLEAN
     },
     {
       tableName: 'Challenges',
