@@ -1,7 +1,7 @@
 
   # .github/workflows/az-security-scan.yml
 
-  name: AZ-Security-Scan
+  name: AZ-Security-Scan 
   
   on:
     push:
