@@ -15,7 +15,7 @@
       
       env:
         AZ_API_KEY: "${{ secrets.AZ_TOKEN }}"
-        PROJECT_KEY: "cxfIncaRbDBznMmUNvivfQbfSglmjsjX"
+        PROJECT_KEY: "roJXCMZoDiIZefjMPixEGWJwSsvBfxIg"
         BRANCH_NAME: "${{ github.ref_name }}"
         
       steps:
