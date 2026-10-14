@@ -25,3 +25,4 @@
         - name: ArmourZero Security Test (Pre)
           run: |
             docker run --pull=always -v "$(pwd):/app/wrk" --rm armourzero/pipe-scan:latest --apikey="$AZ_API_KEY" --projectkey="$PROJECT_KEY" --branch="$BRANCH_NAME" --repo="$GITHUB_REPOSITORY"
+ 
