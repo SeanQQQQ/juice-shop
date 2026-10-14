@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
 import { ConfigurationService } from '../Services/configuration.service'
-import { Component, type OnInit } from '@angular/core'
+import { Component, type OnInit, inject, ChangeDetectionStrategy } from '@angular/core'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faBitcoin } from '@fortawesome/free-brands-svg-icons'
 import { faCommentAlt, faComments, faGraduationCap, faUniversity } from '@fortawesome/free-solid-svg-icons'
@@ -17,14 +17,16 @@ import { MatCardModule, MatCardHeader, MatCardTitle, MatCardSubtitle } from '@an
 library.add(faBitcoin, faUniversity, faGraduationCap, faCommentAlt, faComments, farCommentAlt, farComments)
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-token-sale',
   templateUrl: './token-sale.component.html',
   styleUrls: ['./token-sale.component.scss'],
   imports: [MatCardModule, MatCardHeader, MatCardTitle, MatCardSubtitle, TranslateModule, MatButtonModule]
 })
 export class TokenSaleComponent implements OnInit {
+  private readonly configurationService = inject(ConfigurationService)
+
   public altcoinName = 'Juicycoin'
-  constructor (private readonly configurationService: ConfigurationService) { }
 
   ngOnInit (): void {
     this.configurationService.getApplicationConfiguration().subscribe({

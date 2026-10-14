@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
 import { TranslateService, TranslateModule } from '@ngx-translate/core'
 import { ChallengeService } from '../Services/challenge.service'
-import { ChangeDetectorRef, Component, NgZone, type OnInit } from '@angular/core'
+import { ChangeDetectorRef, Component, NgZone, type OnInit, inject, ChangeDetectionStrategy } from '@angular/core'
 import { CookieService } from 'ngy-cookie'
 import { SocketIoService } from '../Services/socket-io.service'
 import { MatIconModule } from '@angular/material/icon'
@@ -18,16 +18,21 @@ interface HackingProgress {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-server-started-notification',
   templateUrl: './server-started-notification.component.html',
   styleUrls: ['./server-started-notification.component.scss'],
   imports: [MatCardModule, MatCardContent, TranslateModule, MatButtonModule, MatIconModule]
 })
 export class ServerStartedNotificationComponent implements OnInit {
-  public hackingProgress: HackingProgress = {} as HackingProgress
+  private readonly ngZone = inject(NgZone)
+  private readonly challengeService = inject(ChallengeService)
+  private readonly translate = inject(TranslateService)
+  private readonly cookieService = inject(CookieService)
+  private readonly ref = inject(ChangeDetectorRef)
+  private readonly io = inject(SocketIoService)
 
-  constructor (private readonly ngZone: NgZone, private readonly challengeService: ChallengeService, private readonly translate: TranslateService, private readonly cookieService: CookieService, private readonly ref: ChangeDetectorRef, private readonly io: SocketIoService) {
-  }
+  public hackingProgress: HackingProgress = {} as HackingProgress
 
   ngOnInit (): void {
     this.ngZone.runOutsideAngular(() => {

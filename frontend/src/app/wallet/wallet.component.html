@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+  ~ Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
   ~ SPDX-License-Identifier: MIT
 -->
 
@@ -18,7 +18,7 @@
         <span class="confirmation"> {{ balance }}</span>
       </b>
     </p>
-    <mat-form-field appearance="outline" color="accent">
+    <mat-form-field appearance="outline" color="tertiary">
       <mat-label>{{'LABEL_AMOUNT' | translate}}</mat-label>
       <input [formControl]="balanceControl" type="number" matInput aria-label="Enter an amount">
       @if (balanceControl.invalid && balanceControl.errors.required) {

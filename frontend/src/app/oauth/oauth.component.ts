@@ -1,23 +1,29 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
 import { ActivatedRoute, Router } from '@angular/router'
 import { UserService } from '../Services/user.service'
 import { CookieService } from 'ngy-cookie'
-import { Component, NgZone, type OnInit } from '@angular/core'
+import { Component, NgZone, type OnInit, inject, ChangeDetectionStrategy } from '@angular/core'
 import { TranslateModule } from '@ngx-translate/core'
 import { MatCardModule } from '@angular/material/card'
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-oauth',
   templateUrl: './oauth.component.html',
   styleUrls: ['./oauth.component.scss'],
   imports: [MatCardModule, TranslateModule]
 })
 export class OAuthComponent implements OnInit {
-  constructor (private readonly cookieService: CookieService, private readonly userService: UserService, private readonly router: Router, private readonly route: ActivatedRoute, private readonly ngZone: NgZone) { }
+  private readonly cookieService = inject(CookieService)
+  private readonly userService = inject(UserService)
+  private readonly router = inject(Router)
+  private readonly route = inject(ActivatedRoute)
+  private readonly ngZone = inject(NgZone)
+
 
   ngOnInit (): void {
     this.userService.oauthLogin(this.parseRedirectUrlParams().access_token).subscribe({
@@ -66,10 +72,9 @@ export class OAuthComponent implements OnInit {
     const hash = this.route.snapshot.data.params.substr(1)
     const splitted = hash.split('&')
     const params: any = {}
-    for (let i = 0; i < splitted.length; i++) {
-      const param: string = splitted[i].split('=')
-      const key: string = param[0]
-      params[key] = param[1]
+    for (const part of splitted) {
+      const [key, value] = part.split('=')
+      params[key] = value
     }
     return params
   }

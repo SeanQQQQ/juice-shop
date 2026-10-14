@@ -1,16 +1,15 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
 import { ConfigurationService } from '../Services/configuration.service'
 import { UserService } from '../Services/user.service'
 import { RecycleService } from '../Services/recycle.service'
-import { Component, type OnInit, ViewChild } from '@angular/core'
+import { Component, type OnInit, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core'
 import { UntypedFormControl, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons'
-import { FormSubmitService } from '../Services/form-submit.service'
 import { AddressComponent } from '../address/address.component'
 import { TranslateService, TranslateModule } from '@ngx-translate/core'
 import { SnackBarHelperService } from '../Services/snack-bar-helper.service'
@@ -26,12 +25,19 @@ import { MatCardModule, MatCardImage, MatCardContent } from '@angular/material/c
 library.add(faPaperPlane)
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-recycle',
   templateUrl: './recycle.component.html',
   styleUrls: ['./recycle.component.scss'],
   imports: [MatCardModule, TranslateModule, MatFormFieldModule, MatLabel, MatInputModule, FormsModule, ReactiveFormsModule, MatError, AddressComponent, MatDatepickerInput, MatDatepickerToggle, MatSuffix, MatDatepicker, MatCheckbox, MatButtonModule, MatCardImage, MatCardContent]
 })
 export class RecycleComponent implements OnInit {
+  private readonly recycleService = inject(RecycleService)
+  private readonly userService = inject(UserService)
+  private readonly configurationService = inject(ConfigurationService)
+  private readonly translate = inject(TranslateService)
+  private readonly snackBarHelperService = inject(SnackBarHelperService)
+
   @ViewChild('addressComp', { static: true }) public addressComponent: AddressComponent
   public requestorControl: UntypedFormControl = new UntypedFormControl({ value: '', disabled: true }, [])
   public recycleQuantityControl: UntypedFormControl = new UntypedFormControl('', [Validators.required, Validators.min(10), Validators.max(1000)])
@@ -44,17 +50,14 @@ export class RecycleComponent implements OnInit {
   public userEmail: any
   public confirmation: any
   public addressId: any = undefined
-  constructor (private readonly recycleService: RecycleService, private readonly userService: UserService,
-    private readonly configurationService: ConfigurationService, private readonly formSubmitService: FormSubmitService,
-    private readonly translate: TranslateService, private readonly snackBarHelperService: SnackBarHelperService) { }
 
   ngOnInit (): void {
     this.configurationService.getApplicationConfiguration().subscribe({
       next: (config: any) => {
         if (config?.application?.recyclePage) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
           this.topImage = `assets/public/images/products/${config.application.recyclePage.topProductImage}`
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
           this.bottomImage = `assets/public/images/products/${config.application.recyclePage.bottomProductImage}`
         }
       },
@@ -63,12 +66,10 @@ export class RecycleComponent implements OnInit {
 
     this.initRecycle()
     this.findAll()
-
-    this.formSubmitService.attachEnterKeyHandler('recycle-form', 'recycleButton', () => { this.save() })
   }
 
   initRecycle () {
-    this.userService.whoAmI().subscribe({
+    this.userService.whoAmI(['id', 'email']).subscribe({
       next: (data) => {
         this.recycle = {}
         this.recycle.UserId = data.id

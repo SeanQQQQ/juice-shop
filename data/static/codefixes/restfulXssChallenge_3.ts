@@ -3,7 +3,7 @@ ngAfterViewInit () {
     const quantities = this.quantityService.getAll()
     forkJoin([quantities, products]).subscribe({
       next: ([quantities, products]) => {
-        const dataTable: TableEntry[] = []
+        const dataTable: ProductTableEntry[] = []
         this.tableData = products
         this.trustProductDescription(products)
         for (const product of products) {
@@ -13,7 +13,8 @@ ngAfterViewInit () {
             deluxePrice: product.deluxePrice,
             id: product.id,
             image: product.image,
-            description: product.description
+            description: product.description,
+            alternateImages: product.alternateImages
           })
         }
         for (const quantity of quantities) {
@@ -24,13 +25,12 @@ ngAfterViewInit () {
             continue
           }
           entry.quantity = quantity.quantity
+          entry.limitPerUser = quantity.limitPerUser
         }
-        this.dataSource = new MatTableDataSource<TableEntry>(dataTable)
-        for (let i = 1; i <= Math.ceil(this.dataSource.data.length / 12); i++) {
-          this.pageSizeOptions.push(i * 12)
-        }
-        this.paginator.pageSizeOptions = this.pageSizeOptions
+        this.dataSource = new MatTableDataSource<ProductTableEntry>(dataTable)
+        this.updatePageSizeOptions()
         this.dataSource.paginator = this.paginator
+        this.setupResponsivePageSize()
         this.gridDataSource = this.dataSource.connect()
         this.resultsLength = this.dataSource.data.length
         this.filterTable()
@@ -44,7 +44,7 @@ ngAfterViewInit () {
   }
 
   trustProductDescription (tableData: any[]) {
-    for (let i = 0; i < tableData.length; i++) {
-      tableData[i].description = this.sanitizer.bypassSecurityTrustHtml(tableData[i].description)
-    }
+    tableData.forEach((product: any) => {
+      product.description = this.sanitizer.bypassSecurityTrustHtml(product.description)
+    })
   }

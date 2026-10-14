@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
-import { Component, type OnInit } from '@angular/core'
+import { Component, type OnInit, inject, ChangeDetectionStrategy } from '@angular/core'
 import { DomSanitizer } from '@angular/platform-browser'
 import { ConfigurationService } from '../Services/configuration.service'
 import { FeedbackService } from '../Services/feedback.service'
@@ -22,12 +22,18 @@ import { MatCardModule } from '@angular/material/card'
 library.add(faFacebook, faTwitter, faSlack, faReddit, faNewspaper, faStar, fasStar, faPalette, faMastodon, faBold)
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-about',
   templateUrl: './about.component.html',
   styleUrls: ['./about.component.scss'],
   imports: [MatCardModule, TranslateModule, GalleryComponent, GalleryImageDef, MatButtonModule]
 })
 export class AboutComponent implements OnInit {
+  private readonly configurationService = inject(ConfigurationService)
+  private readonly feedbackService = inject(FeedbackService)
+  private readonly sanitizer = inject(DomSanitizer)
+  private readonly gallery = inject(Gallery)
+
   public blueSkyUrl?: string
   public mastodonUrl?: string
   public twitterUrl?: string
@@ -56,13 +62,6 @@ export class AboutComponent implements OnInit {
     '<i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>',
     '<i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>'
   ]
-
-  constructor (
-    private readonly configurationService: ConfigurationService,
-    private readonly feedbackService: FeedbackService,
-    private readonly sanitizer: DomSanitizer,
-    private readonly gallery: Gallery
-  ) {}
 
   ngOnInit (): void {
     this.galleryRef = this.gallery.ref('feedback-gallery')
@@ -114,10 +113,10 @@ export class AboutComponent implements OnInit {
       )
       .subscribe((feedbacks) => {
         for (let i = 0; i < feedbacks.length; i++) {
-          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-          feedbacks[i].comment = `<span style="width: 90%; display:block;">${
+
+          feedbacks[i].comment = `<figcaption><p class="feedback-comment">${
             feedbacks[i].comment
-          }<br/> (${this.stars[feedbacks[i].rating]})</span>`
+          }</p><div class="feedback-stars">(${this.stars[feedbacks[i].rating]})</div></figcaption>`
           feedbacks[i].comment = this.sanitizer.bypassSecurityTrustHtml(
             feedbacks[i].comment
           )

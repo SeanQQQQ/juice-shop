@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
-import { Component, Input } from '@angular/core'
+import { Component, Input, inject, ChangeDetectionStrategy } from '@angular/core'
 import { WindowRefService } from '../Services/window-ref.service'
 import { ChallengeService } from '../Services/challenge.service'
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -19,17 +19,19 @@ import { MatButtonModule } from '@angular/material/button'
 library.add(faWindows)
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-challenge-status-badge',
   templateUrl: './challenge-status-badge.component.html',
   styleUrls: ['./challenge-status-badge.component.scss'],
   imports: [MatButtonModule, MatTooltip, MatIconModule, TranslateModule]
 })
 export class ChallengeStatusBadgeComponent {
-  @Input() public challenge: Challenge = { } as Challenge
-  @Input() public allowRepeatNotifications: boolean = false
-  @Input() public showChallengeHints: boolean = true
+  private readonly challengeService = inject(ChallengeService)
+  private readonly windowRefService = inject(WindowRefService)
 
-  constructor (private readonly challengeService: ChallengeService, private readonly windowRefService: WindowRefService) { }
+  @Input() public challenge: Challenge = { } as Challenge
+  @Input() public allowRepeatNotifications = false
+  @Input() public showChallengeHints = true
 
   repeatNotification () {
     if (this.allowRepeatNotifications) {

@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
 import { environment } from '../../environments/environment'
 import { ChallengeService } from '../Services/challenge.service'
-import { Component, EventEmitter, NgZone, type OnInit, Output } from '@angular/core'
+import { Component, EventEmitter, NgZone, type OnInit, Output, inject, ChangeDetectionStrategy } from '@angular/core'
 import { SocketIoService } from '../Services/socket-io.service'
 import { AdministrationService } from '../Services/administration.service'
 import { Router, RouterLink } from '@angular/router'
@@ -24,32 +24,39 @@ import { MatNavList, MatListSubheaderCssMatStyler, MatListItem } from '@angular/
 import { MatToolbar, MatToolbarRow } from '@angular/material/toolbar'
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'sidenav',
   templateUrl: './sidenav.component.html',
   styleUrls: ['./sidenav.component.scss'],
   imports: [MatToolbar, MatToolbarRow, MatNavList, MatButtonModule, MatListSubheaderCssMatStyler, TranslateModule, MatListItem, RouterLink, MatIconModule, NgClass, MatDivider]
 })
 export class SidenavComponent implements OnInit {
+  private readonly administrationService = inject(AdministrationService)
+  private readonly challengeService = inject(ChallengeService)
+  private readonly ngZone = inject(NgZone)
+  private readonly io = inject(SocketIoService)
+  private readonly userService = inject(UserService)
+  private readonly cookieService = inject(CookieService)
+  private readonly router = inject(Router)
+  private readonly configurationService = inject(ConfigurationService)
+  private readonly loginGuard = inject(LoginGuard)
+
   public applicationName = 'OWASP Juice Shop'
   public showGitHubLink = true
   public userEmail = ''
-  public scoreBoardVisible: boolean = false
-  public version: string = ''
-  public showPrivacySubmenu: boolean = false
-  public showOrdersSubmenu: boolean = false
+  public scoreBoardVisible = false
+  public version = ''
+  public showPrivacySubmenu = false
+  public showOrdersSubmenu = false
   public isShowing = false
-  public offerScoreBoardTutorial: boolean = false
+  public offerScoreBoardTutorial = false
   @Output() public sidenavToggle = new EventEmitter()
-
-  constructor (private readonly administrationService: AdministrationService, private readonly challengeService: ChallengeService,
-    private readonly ngZone: NgZone, private readonly io: SocketIoService, private readonly userService: UserService, private readonly cookieService: CookieService,
-    private readonly router: Router, private readonly configurationService: ConfigurationService, private readonly loginGuard: LoginGuard) { }
 
   ngOnInit (): void {
     this.administrationService.getApplicationVersion().subscribe({
       next: (version: any) => {
         if (version) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
           this.version = `v${version}`
         }
       },
@@ -85,11 +92,12 @@ export class SidenavComponent implements OnInit {
   }
 
   logout () {
-    this.userService.saveLastLoginIp().subscribe({ next: (user: any) => { this.noop() }, error: (err) => { console.log(err) } })
+    this.userService.saveLastLoginIp().subscribe({ next: () => { this.noop() }, error: (err) => { console.log(err) } })
     localStorage.removeItem('token')
     this.cookieService.remove('token')
     sessionStorage.removeItem('bid')
     sessionStorage.removeItem('itemTotal')
+    sessionStorage.removeItem('guestBasket')
     this.userService.isLoggedIn.next(false)
     this.ngZone.run(async () => await this.router.navigate(['/']))
   }
@@ -102,7 +110,7 @@ export class SidenavComponent implements OnInit {
     window.location.replace(environment.hostServer + '/dataerasure')
   }
 
-  // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+
   noop () { }
 
   getScoreBoardStatus () {
@@ -117,7 +125,7 @@ export class SidenavComponent implements OnInit {
   }
 
   getUserDetails () {
-    this.userService.whoAmI().subscribe({
+    this.userService.whoAmI(['email']).subscribe({
       next: (user: any) => {
         this.userEmail = user.email
       },
@@ -154,8 +162,12 @@ export class SidenavComponent implements OnInit {
   startHackingInstructor () {
     this.onToggleSidenav()
     console.log('Starting instructions for challenge "Score Board"')
-    import(/* webpackChunkName: "tutorial" */ '../../hacking-instructor').then(module => {
-      module.startHackingInstructorFor('Score Board')
+    this.launchHackingInstructor('Score Board')
+  }
+
+  protected launchHackingInstructor (challengeName: string) {
+    import('../../hacking-instructor').then(module => {
+      module.startHackingInstructorFor(challengeName)
     })
   }
 }

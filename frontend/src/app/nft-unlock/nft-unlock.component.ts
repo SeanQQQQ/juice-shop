@@ -1,4 +1,4 @@
-import { Component } from '@angular/core'
+import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core'
 import { KeysService } from '../Services/keys.service'
 import { MatDivider } from '@angular/material/divider'
 import { MatInputModule } from '@angular/material/input'
@@ -11,23 +11,24 @@ import { MatButtonModule } from '@angular/material/button'
 import { MatCardModule, MatCardTitle } from '@angular/material/card'
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-nft-unlock',
   templateUrl: './nft-unlock.component.html',
   styleUrls: ['./nft-unlock.component.scss'],
   imports: [MatCardModule, MatButtonModule, TranslateModule, MatCardTitle, FormsModule, MatFormFieldModule, MatLabel, MatInputModule, MatDivider]
 })
-export class NFTUnlockComponent {
+export class NFTUnlockComponent implements OnInit {
+  private readonly keysService = inject(KeysService)
+
   privateKey: string
-  formSubmitted: boolean = false
-  successResponse: boolean = false
+  formSubmitted = false
+  successResponse = false
   errorMessage = ''
 
   // Params for translation with HTML link
   i18nParams = {
     link: '<a target="_blank" rel="noopener noreferrer" href="https://testnets.opensea.io/assets/mumbai/0xf4817631372dca68a25a18eb7a0b36d54f3dbcf7/0">Opensea</a>'
   }
-
-  constructor (private readonly keysService: KeysService) {}
 
   ngOnInit (): void {
     this.checkChallengeStatus()

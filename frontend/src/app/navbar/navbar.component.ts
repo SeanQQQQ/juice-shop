@@ -1,9 +1,9 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
-import { Component, EventEmitter, NgZone, type OnInit, Output } from '@angular/core'
+import { Component, EventEmitter, NgZone, type OnInit, Output, inject, ChangeDetectionStrategy } from '@angular/core'
 import { environment } from '../../environments/environment'
 import { ChallengeService } from '../Services/challenge.service'
 import { UserService } from '../Services/user.service'
@@ -16,6 +16,7 @@ import { SocketIoService } from '../Services/socket-io.service'
 import { LanguagesService } from '../Services/languages.service'
 import { MatSnackBar } from '@angular/material/snack-bar'
 import { BasketService } from '../Services/basket.service'
+import { WindowRefService } from '../Services/window-ref.service'
 import { FormsModule } from '@angular/forms'
 import { MatFormFieldModule } from '@angular/material/form-field'
 import { MatInputModule } from '@angular/material/input'
@@ -60,6 +61,7 @@ import { MatToolbar, MatToolbarRow } from '@angular/material/toolbar'
 library.add(faLanguage, faSearch, faSignInAlt, faSignOutAlt, faComment, faBomb, faTrophy, faInfoCircle, faShoppingCart, faUserSecret, faRecycle, faMapMarker, faUserCircle, faGithub, faComments, faThermometerEmpty, faThermometerQuarter, faThermometerHalf, faThermometerThreeQuarters, faThermometerFull)
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-navbar',
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
@@ -83,34 +85,44 @@ library.add(faLanguage, faSearch, faSignInAlt, faSignOutAlt, faComment, faBomb, 
   ]
 })
 export class NavbarComponent implements OnInit {
-  public userEmail: string = ''
+  private readonly administrationService = inject(AdministrationService)
+  private readonly challengeService = inject(ChallengeService)
+  private readonly configurationService = inject(ConfigurationService)
+  private readonly userService = inject(UserService)
+  private readonly ngZone = inject(NgZone)
+  private readonly cookieService = inject(CookieService)
+  private readonly router = inject(Router)
+  private readonly translate = inject(TranslateService)
+  private readonly io = inject(SocketIoService)
+  private readonly langService = inject(LanguagesService)
+  private readonly loginGuard = inject(LoginGuard)
+  private readonly snackBar = inject(MatSnackBar)
+  private readonly basketService = inject(BasketService)
+  private readonly windowRefService = inject(WindowRefService)
+
+  public userEmail = ''
   public languages: any[] = []
   public filteredLanguages: any[] = []
-  public languageSearchQuery: string = ''
-  public selectedLanguage: string = 'placeholder'
-  public version: string = ''
-  public applicationName: string = 'OWASP Juice Shop'
-  public showGitHubLink: boolean = true
-  public logoSrc: string = 'assets/public/images/JuiceShop_Logo.png'
-  public scoreBoardVisible: boolean = false
-  public shortKeyLang: string = 'placeholder'
+  public languageSearchQuery = ''
+  public selectedLanguage = 'placeholder'
+  public version = ''
+  public applicationName = 'OWASP Juice Shop'
+  public showGitHubLink = true
+  public logoSrc = 'assets/public/images/JuiceShop_Logo.png'
+  public scoreBoardVisible = false
+  public shortKeyLang = 'placeholder'
   public itemTotal = 0
 
   @Output() public sidenavToggle = new EventEmitter()
 
-  constructor (private readonly administrationService: AdministrationService, private readonly challengeService: ChallengeService,
-    private readonly configurationService: ConfigurationService, private readonly userService: UserService, private readonly ngZone: NgZone,
-    private readonly cookieService: CookieService, private readonly router: Router, private readonly translate: TranslateService,
-    private readonly io: SocketIoService, private readonly langService: LanguagesService, private readonly loginGuard: LoginGuard,
-    private readonly snackBar: MatSnackBar, private readonly basketService: BasketService) { }
-
   ngOnInit (): void {
     this.getLanguages()
     this.basketService.getItemTotal().subscribe(x => (this.itemTotal = x))
+    this.basketService.updateNumberOfCartItems()
     this.administrationService.getApplicationVersion().subscribe({
       next: (version: any) => {
         if (version) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
           this.version = `v${version}`
         }
       },
@@ -149,6 +161,7 @@ export class NavbarComponent implements OnInit {
         this.getUserDetails()
       } else {
         this.userEmail = ''
+        this.basketService.updateNumberOfCartItems()
       }
     })
 
@@ -226,11 +239,12 @@ export class NavbarComponent implements OnInit {
   }
 
   logout () {
-    this.userService.saveLastLoginIp().subscribe({ next: (user: any) => { this.noop() }, error: (err) => { console.log(err) } })
+    this.userService.saveLastLoginIp().subscribe({ next: () => { this.noop() }, error: (err) => { console.log(err) } })
     localStorage.removeItem('token')
     this.cookieService.remove('token')
     sessionStorage.removeItem('bid')
     sessionStorage.removeItem('itemTotal')
+    sessionStorage.removeItem('guestBasket')
     this.userService.isLoggedIn.next(false)
     this.ngZone.run(async () => await this.router.navigate(['/']))
   }
@@ -243,13 +257,13 @@ export class NavbarComponent implements OnInit {
     if (this.languages.find((y: { key: string }) => y.key === langKey)) {
       const language = this.languages.find((y: { key: string }) => y.key === langKey)
       this.shortKeyLang = language.shortKey
-      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+
       const snackBarRef = this.snackBar.open(`Language has been changed to ${language.lang}`, 'Force page reload', {
         duration: 5000,
         panelClass: ['mat-body']
       })
       snackBarRef.onAction().subscribe(() => {
-        location.reload()
+        this.windowRefService.nativeWindow.location.reload()
       })
     }
   }
@@ -277,7 +291,7 @@ export class NavbarComponent implements OnInit {
     this.sidenavToggle.emit()
   }
 
-  // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
+
   noop () { }
 
   getLanguages () {

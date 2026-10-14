@@ -1,12 +1,12 @@
 <!--
-  ~ Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+  ~ Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
   ~ SPDX-License-Identifier: MIT
 -->
 
 @if (!challenge.disabledEnv && challenge.solved) {
   <button
     [id]="challenge.name + '.solved'"
-    mat-raised-button color="accent"
+    mat-raised-button color="tertiary"
     (click)="repeatNotification()"
     [matTooltip]="allowRepeatNotifications ? ('NOTIFICATION_RESEND_INSTRUCTIONS' | translate) : null"
     matTooltipPosition="above">

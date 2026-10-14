@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
@@ -21,4 +21,10 @@ export interface Challenge {
   codingChallengeStatus?: 0 | 1 | 2
   mitigationUrl?: string
   hasCodingChallenge: boolean
+  ChallengeDependencies?: {
+    name: string
+    documentation: string
+    key: string
+    missing: boolean
+  }[]
 }

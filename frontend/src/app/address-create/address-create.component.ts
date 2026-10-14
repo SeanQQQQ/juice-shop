@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2014-2025 Bjoern Kimminich & the OWASP Juice Shop contributors.
+ * Copyright (c) 2014-2026 Bjoern Kimminich & the OWASP Juice Shop contributors.
  * SPDX-License-Identifier: MIT
  */
 
 import { UntypedFormControl, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms'
-import { Component, type OnInit } from '@angular/core'
-import { FormSubmitService } from '../Services/form-submit.service'
+import { Component, type OnInit, inject, ChangeDetectionStrategy } from '@angular/core'
 import { AddressService } from '../Services/address.service'
 import { ActivatedRoute, type ParamMap, Router } from '@angular/router'
 import { Location } from '@angular/common'
@@ -18,12 +17,20 @@ import { MatFormFieldModule, MatLabel, MatError, MatHint } from '@angular/materi
 import { MatCardModule } from '@angular/material/card'
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
   selector: 'app-address-create',
   templateUrl: './address-create.component.html',
   styleUrls: ['./address-create.component.scss'],
   imports: [MatCardModule, TranslateModule, MatFormFieldModule, MatLabel, MatInputModule, FormsModule, ReactiveFormsModule, MatError, MatHint, MatButtonModule, MatIconModule]
 })
 export class AddressCreateComponent implements OnInit {
+  private readonly location = inject(Location)
+  private readonly addressService = inject(AddressService)
+  private readonly router = inject(Router)
+  activatedRoute = inject(ActivatedRoute)
+  private readonly translate = inject(TranslateService)
+  private readonly snackBarHelperService = inject(SnackBarHelperService)
+
   public countryControl: UntypedFormControl = new UntypedFormControl('', [Validators.required])
   public nameControl: UntypedFormControl = new UntypedFormControl('', [Validators.required])
   public numberControl: UntypedFormControl = new UntypedFormControl('', [Validators.required, Validators.min(1111111), Validators.max(9999999999)])
@@ -34,10 +41,6 @@ export class AddressCreateComponent implements OnInit {
   public address: any = undefined
   public mode = 'create'
   private addressId: string = undefined
-
-  constructor (private readonly location: Location, private readonly formSubmitService: FormSubmitService,
-    private readonly addressService: AddressService, private readonly router: Router, public activatedRoute: ActivatedRoute,
-    private readonly translate: TranslateService, private readonly snackBarHelperService: SnackBarHelperService) { }
 
   ngOnInit (): void {
     this.address = {}
@@ -53,7 +56,6 @@ export class AddressCreateComponent implements OnInit {
         this.addressId = null
       }
     })
-    this.formSubmitService.attachEnterKeyHandler('address-form', 'submitButton', () => { this.save() })
   }
 
   save () {
