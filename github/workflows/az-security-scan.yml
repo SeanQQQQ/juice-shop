@@ -9,7 +9,7 @@
         - '*'
     workflow_dispatch:
   
-  jobs:
+  jobs: 
     armourzero_security_test_pre:
       runs-on: ubuntu-latest
       
